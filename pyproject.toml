@@ -1,0 +1,18 @@
+[project]
+name = "frontend-streamlit"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Ranjan Shrestha",email = "76832884+runzun1987@users.noreply.github.com"}
+]
+readme = "README.md"
+requires-python = ">=3.9,<3.9.7 || >3.9.7"
+dependencies = [
+    "streamlit (>=1.44.1,<2.0.0)",
+    "pillow (>=11.2.1,<12.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
