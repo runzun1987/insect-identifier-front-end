@@ -1,6 +1,15 @@
 import streamlit as st
 import requests
 from utils.image import convert_image_bytes_to_base64
+import time
+
+isProd = True
+
+
+BACKEND_URL = "https://insect-identifier.vercel.app/chat" if isProd else "http://localhost:8000/chat"
+
+BACKEND_URL_IMAGE = "https://insect-identifier.vercel.app/image" if isProd else "http://localhost:8000/image"
+
 
 # Password setup
 def check_password():
@@ -40,7 +49,7 @@ if check_password():
     OPENAI = "openai"
     GROQ = "groq"
 
-    BACKEND_URL = "https://insect-identifier.vercel.app/chat"
+
 
     st.markdown("""
         <div style="text-align: center;">
@@ -73,6 +82,7 @@ if check_password():
         selected_model = st.selectbox("Select Model", MODEL_OPTIONS[providers])
 
         is_detailed = st.radio("Response Detail", [True, False], index=1, horizontal=True)
+        old_fetching_style = st.radio("Old Style", [True, False], index=1, horizontal=True)
 
         st.markdown("### 🔎 Example Prompts")
         st.code(IMAGE_CONVERSATION)
@@ -111,29 +121,68 @@ if check_password():
                 st.warning("Please enter your query.")
             else:
                 st.info("Sending your request to the agent...")
-                payload = {
-                    "query": user_query,
-                    "model_name": selected_model,
-                    "model_provider": providers,
-                    "image_url": image_url,
-                    "base64_image": base64_image,
-                    "just_last_message": not is_detailed,
-                    "thread_id": thread_id
-                }
 
-                try:
-                    response = requests.post(BACKEND_URL, json=payload)
-                    response.raise_for_status()
-                    data = response.json()
-                    if "error" in data:
-                        st.error(f"❌ {data['error']}")
+                is_image_search = bool(image_url or base64_image)
+
+
+                def handle_response(response, elapsed_time, endpoint_used):
+                    try:
+                        response.raise_for_status()
+                        data = response.json()
+                        if "error" in data:
+                            st.error(f"❌ {data['error']}")
+                        else:
+                            st.success("✅ Agent replied!")
+                            st.markdown("### 🤖 Agent's Answer")
+                            st.write(data)
+                            st.info(f"🌐 Endpoint used: `{endpoint_used}`")
+                            st.info(f"⏱️ Response time: {elapsed_time:.2f} seconds")
+                    except requests.RequestException as e:
+                        st.error(f"❗ Network Error: {e}")
+
+
+                # Prepare payload and endpoint
+                if is_image_search:
+                    if old_fetching_style:
+                        payload = {
+                            "query": user_query,
+                            "model_name": selected_model,
+                            "model_provider": providers,
+                            "image_url": image_url,
+                            "base64_image": base64_image,
+                            "just_last_message": not is_detailed,
+                            "thread_id": thread_id,
+                            "isTest": False
+                        }
+                        endpoint = BACKEND_URL
                     else:
-                        st.success("✅ Agent replied!")
-                        st.markdown("### 🤖 Agent's Answer")
-                        st.write(data)
-                except requests.RequestException as e:
-                    st.error(f"❗ Network Error: {e}")
+                        payload = {
+                            "model_name": selected_model,
+                            "model_provider": providers,
+                            "image_url": image_url,
+                            "base64_image": base64_image,
+                            "thread_id": thread_id
+                        }
+                        endpoint = BACKEND_URL_IMAGE
+                else:
+                    payload = {
+                        "query": user_query,
+                        "model_name": selected_model,
+                        "model_provider": providers,
+                        "image_url": image_url,
+                        "base64_image": base64_image,
+                        "just_last_message": not is_detailed,
+                        "thread_id": thread_id,
+                        "isTest": False
+                    }
+                    endpoint = BACKEND_URL
 
+                # Measure response time
+                start_time = time.time()
+                response = requests.post(endpoint, json=payload)
+                end_time = time.time()
+
+                handle_response(response, end_time - start_time, endpoint)
         st.markdown("### 📸 Image Gallery (Copy Image URLs)")
         image_urls = [
             "https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Sunflower_from_Silesia2.jpg/1280px-Sunflower_from_Silesia2.jpg",
