@@ -57,7 +57,7 @@ if check_password():
         <div style="text-align: center;">
             <h1 style="margin-bottom: 0;">🪲 Insect Identifying Bot</h1>
             <p style="font-size: 1.1rem; color: gray;">
-                Chat with AI agents to identify insects using image + text.
+                Chat with AI agents to identify insects using image + text New Base64 updated.
             </p>
         </div>
     """, unsafe_allow_html=True)
