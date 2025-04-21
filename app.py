@@ -3,7 +3,7 @@ import requests
 from utils.image import convert_image_bytes_to_base64
 import time
 
-isProd = True
+isProd = False
 
 
 BACKEND_URL = "https://insect-identifier.vercel.app/chat" if isProd else "http://localhost:8000/chat"
@@ -99,7 +99,7 @@ if check_password():
 
         button_col1, button_col2 = st.columns([1, 1])
         ask_button = button_col1.button("🚀 Ask Agent", use_container_width=True)
-        attach_image_button = button_col2.button("📎 Next", use_container_width=True)
+        attach_image_button = button_col2.button("📎 Attach Image", use_container_width=True)
 
         if "show_image_input" not in st.session_state:
             st.session_state.show_image_input = False
