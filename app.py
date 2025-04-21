@@ -3,7 +3,9 @@ import requests
 from utils.image import convert_image_bytes_to_base64
 import time
 
-isProd = False
+
+## Change this to True if you want to use the live APIs
+isProd = True
 
 
 BACKEND_URL = "https://insect-identifier.vercel.app/chat" if isProd else "http://localhost:8000/chat"
