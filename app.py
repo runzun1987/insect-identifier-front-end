@@ -5,7 +5,7 @@ import time
 
 
 ## Change this to True if you want to use the live APIs
-isProd = True
+isProd = False
 
 
 BACKEND_URL = "https://insect-identifier.vercel.app/chat" if isProd else "http://localhost:8000/chat"
@@ -46,6 +46,34 @@ if check_password():
 
     PREV_CONVERSATION_CHECKER = "I want to know more about that insect that i have previously provided please check"
     PREV_CONVERSATION_CHECKER2 = "give more info about this "
+    AAA = """
+ "Imagine there is an insect named Humanoid Insect. Generate random thoughts about that insect and return the result in the following format. The name should always be Humanoid Insect.
+For this task, return the details in this exact format:
+{format_instructions}
+Here is an example return type: {api_result} (Do not use this data directly, it's just an example)."
+    
+    
+    """
+
+
+
+    DEFAULT_IMAGE_PROMPT = """
+
+                     "Using the following iNaturalist API result, identify any insects or bug-like creatures present:\n{api_result}\n\n"
+                     "For this task, consider all of the following as 'insects' (even if they are not scientifically insects):\n"
+                     "Ants, Beetles, Flies, Mosquitoes, Butterflies, Moths, Bees, Wasps, Dragonflies, Grasshoppers, Crickets, "
+                     "Cockroaches, Termites, Spiders, Ticks, Fleas, Lice, Mites, Earwigs, Silverfish, Centipedes, Millipedes, "
+                     "Aphids, Stink Bugs, Ladybugs, Caterpillars, Locusts, Crane Flies, Fireflies, Bedbugs, and other similar small arthropods.\n\n"
+                     "✅ Treat anything small and bug-like as an insect for this task.\n\n"
+                     "If such a creature is detected, return the details in this exact format:\n{format_instructions}\n\n"
+                     "Include if available:\n"
+                     "Name, Scientific name, Habitat, Diet, Lifespan, Color, Behavior, Description, "
+                     "(Optional) Danger level, (Optional) Rarity.\n\n"
+                     "⚠️ If no insect or bug-like creature is found, respond exactly with:\n"
+                     "`This image does not contain an insect.`"
+
+
+    """
 
     GOOGLEAI = "google"
     OPENAI = "openai"
@@ -93,11 +121,27 @@ if check_password():
         st.code(RANDOM_CONVERSATION)
         st.code(PREV_CONVERSATION_CHECKER)
         st.code(PREV_CONVERSATION_CHECKER2)
+        st.code(AAA)
 
     with main_col:
         st.subheader("💬 Your Query")
-        user_query = st.text_area("What do you want to ask?", height=180,
-                                  placeholder="Describe the insect, behavior, or ask anything related...")
+        # Initialize session state for user_query if not already
+        if "user_query" not in st.session_state:
+            st.session_state.user_query = DEFAULT_IMAGE_PROMPT
+
+        # Layout for text area and clear button
+        text_col, clear_col = st.columns([10, 1])
+        with text_col:
+            user_query = st.text_area(
+                "What do you want to ask?",
+                value=st.session_state.user_query,
+                height=180,
+                placeholder="Describe the insect, behavior, or ask anything related..."
+            )
+            st.session_state.user_query = user_query  # update state with current value
+        with clear_col:
+            if st.button("❌", help="Clear prompt"):
+                st.session_state.user_query = ""
 
         button_col1, button_col2 = st.columns([1, 1])
         ask_button = button_col1.button("🚀 Ask Agent", use_container_width=True)
@@ -119,9 +163,9 @@ if check_password():
                 base64_image = convert_image_bytes_to_base64(image_bytes)
 
         if ask_button:
-            if not user_query.strip():
-                st.warning("Please enter your query.")
-            else:
+            # if not user_query.strip():
+            #     st.warning("Please enter your query.")
+            # else:
                 st.info("Sending your request to the agent...")
 
                 is_image_search = bool(image_url or base64_image)
@@ -163,7 +207,8 @@ if check_password():
                             "model_provider": providers,
                             "image_url": image_url,
                             "base64_image": base64_image,
-                            "thread_id": thread_id
+                            "thread_id": thread_id,
+                            "image_prompt": user_query,
                         }
                         endpoint = BACKEND_URL_IMAGE
                 else:
