@@ -5,7 +5,7 @@ import time
 
 
 ## Change this to True if you want to use the live APIs
-isProd = False
+isProd = True
 
 
 BACKEND_URL = "https://insect-identifier.vercel.app/chat" if isProd else "http://localhost:8000/chat"
